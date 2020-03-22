@@ -94,7 +94,8 @@ func (gui *Gui) stashDo(g *gocui.Gui, v *gocui.View, method string) error {
 		return gui.createErrorPanel(g, err.Error())
 	}
 	go gui.refreshStashEntries()
-	return gui.refreshFiles()
+	go gui.refreshFiles()
+	return nil
 }
 
 func (gui *Gui) handleStashSave(stashFunc func(message string) error) error {
@@ -106,7 +107,8 @@ func (gui *Gui) handleStashSave(stashFunc func(message string) error) error {
 			return gui.createErrorPanel(g, err.Error())
 		}
 		go gui.refreshStashEntries()
-		return gui.refreshFiles()
+		go gui.refreshFiles()
+		return nil
 	})
 }
 

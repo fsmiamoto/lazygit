@@ -1006,7 +1006,7 @@ func (gui *Gui) Run() error {
 		go gui.startBackgroundFetch()
 	}
 
-	gui.goEvery(time.Second*10, gui.stopChan, gui.refreshFiles)
+	gui.goEvery(time.Second*10, gui.stopChan, func() error { gui.refreshFiles(); return nil })
 
 	g.SetManager(gocui.ManagerFunc(gui.layout), gocui.ManagerFunc(gui.getFocusLayout()))
 

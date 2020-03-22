@@ -15,9 +15,7 @@ var cyclableViews = []string{"status", "files", "branches", "commits", "stash"}
 
 func (gui *Gui) refreshSidePanels(g *gocui.Gui) error {
 	go gui.refreshBranches()
-	if err := gui.refreshFiles(); err != nil {
-		return err
-	}
+	go gui.refreshFiles()
 	go gui.refreshCommits()
 	go gui.refreshStashEntries()
 

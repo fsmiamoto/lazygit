@@ -36,16 +36,10 @@ func (gui *Gui) waitForPassUname(g *gocui.Gui, currentView *gocui.View, passOrUn
 func (gui *Gui) handleSubmitCredential(g *gocui.Gui, v *gocui.View) error {
 	message := gui.trimmedContent(v)
 	gui.credentials <- message
-	err := gui.refreshFiles()
-	if err != nil {
-		return err
-	}
+	gui.refreshFiles()
 	v.Clear()
-	err = v.SetCursor(0, 0)
-	if err != nil {
-		return err
-	}
-	_, err = g.SetViewOnBottom("credentials")
+	_ = v.SetCursor(0, 0)
+	_, err := g.SetViewOnBottom("credentials")
 	if err != nil {
 		return err
 	}

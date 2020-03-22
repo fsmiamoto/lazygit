@@ -165,8 +165,5 @@ func (gui *Gui) handleHardResetWithAutoStash(commitSha string, options handleHar
 		}, nil)
 	}
 
-	if err := reset(); err != nil {
-		return err
-	}
-	return gui.refreshSidePanels()
+	return reset()
 }

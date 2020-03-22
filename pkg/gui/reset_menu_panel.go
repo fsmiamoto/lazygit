@@ -21,6 +21,8 @@ func (gui *Gui) resetToRef(ref string, strength string, options commands.RunComm
 
 	go gui.refreshFiles()
 	go gui.refreshBranches()
+	// loading a heap of commits is slow so we limit them whenever doing a reset
+	gui.State.Panels.Commits.LimitCommits = true
 	gui.refreshCommits()
 	if err := gui.resetOrigin(gui.getCommitsView()); err != nil {
 		return err

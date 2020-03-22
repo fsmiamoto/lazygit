@@ -92,7 +92,6 @@ func (b *BranchListBuilder) obtainBranches() []*Branch {
 
 // Build the list of branches for the current repo
 func (b *BranchListBuilder) Build() []*Branch {
-	currentBranchName := b.obtainCurrentBranchName()
 	branches := b.obtainBranches()
 
 	reflogBranches := b.obtainReflogBranches()
@@ -117,12 +116,13 @@ outer:
 	branches = append(branchesWithRecency, branches...)
 
 	if len(branches) == 0 {
+		currentBranchName := b.obtainCurrentBranchName()
 		branches = append([]*Branch{{Name: currentBranchName}}, branches...)
 	}
 
 	for i, branch := range branches {
 		if branch.Head {
-			branch.Name = currentBranchName
+			// branch.Name = currentBranchName
 			branch.Recency = "  *"
 			branches = append(branches[0:i], branches[i+1:]...)
 			branches = append([]*Branch{branch}, branches...)

@@ -4,8 +4,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jesseduffield/lazygit/pkg/utils"
-
 	"github.com/sirupsen/logrus"
 )
 
@@ -165,27 +163,28 @@ func abbreviatedTimeUnit(timeUnit string) string {
 
 func (b *BranchListBuilder) obtainReflogBranches() []*Branch {
 	branches := make([]*Branch, 0)
-	// if we directly put this string in RunCommandWithOutput the compiler complains because it thinks it's a format string
-	unescaped := "git reflog --date=relative --pretty='%gd|%gs' --grep-reflog='checkout: moving' HEAD"
-	rawString, err := b.GitCommand.OSCommand.RunCommandWithOutput(unescaped)
-	if err != nil {
-		return branches
-	}
-
 	branchNameMap := map[string]bool{}
 
-	branchLines := utils.SplitLines(rawString)
-	for _, line := range branchLines {
+	cmd := b.GitCommand.OSCommand.ExecutableFromString("git reflog --date=relative --pretty='%gd|%gs' --grep-reflog='checkout: moving' HEAD")
+
+	err := RunLineOutputCmd(cmd, func(line string) error {
 		recency, branchName := branchInfoFromLine(line)
 		if branchName == "" {
-			continue
+			return nil
 		}
 		if _, ok := branchNameMap[branchName]; ok {
-			continue
+			return nil
 		}
 		branchNameMap[branchName] = true
 		branch := &Branch{Name: branchName, Recency: recency}
 		branches = append(branches, branch)
+
+		return nil
+	})
+	if err != nil {
+		b.Log.Error(err)
+		return branches
 	}
+
 	return branches
 }

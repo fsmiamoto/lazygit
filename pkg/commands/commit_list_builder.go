@@ -102,13 +102,13 @@ func (c *CommitListBuilder) GetCommits(limit bool) ([]*Commit, error) {
 	unpushedCommits := c.getUnpushedCommits()
 	cmd := c.getLogCmd(limit)
 
-	err = RunLineOutputCmd(cmd, func(line string) error {
+	err = RunLineOutputCmd(cmd, func(line string) (bool, error) {
 		commit := c.extractCommitFromLine(line)
 		_, unpushed := unpushedCommits[commit.Sha[:8]]
 		commit.Status = map[bool]string{true: "unpushed", false: "pushed"}[unpushed]
 		commits = append(commits, commit)
 
-		return nil
+		return false, nil
 	})
 	if err != nil {
 		return nil, err

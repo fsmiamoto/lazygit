@@ -167,19 +167,19 @@ func (b *BranchListBuilder) obtainReflogBranches() []*Branch {
 
 	cmd := b.GitCommand.OSCommand.ExecutableFromString("git reflog --date=relative --pretty='%gd|%gs' --grep-reflog='checkout: moving' HEAD")
 
-	err := RunLineOutputCmd(cmd, func(line string) error {
+	err := RunLineOutputCmd(cmd, func(line string) (bool, error) {
 		recency, branchName := branchInfoFromLine(line)
 		if branchName == "" {
-			return nil
+			return false, nil
 		}
 		if _, ok := branchNameMap[branchName]; ok {
-			return nil
+			return false, nil
 		}
 		branchNameMap[branchName] = true
 		branch := &Branch{Name: branchName, Recency: recency}
 		branches = append(branches, branch)
 
-		return nil
+		return false, nil
 	})
 	if err != nil {
 		b.Log.Error(err)

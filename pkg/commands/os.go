@@ -427,7 +427,7 @@ func Kill(cmd *exec.Cmd) error {
 	return cmd.Process.Kill()
 }
 
-func RunLineOutputCmd(cmd *exec.Cmd, onLine func(line string) error) error {
+func RunLineOutputCmd(cmd *exec.Cmd, onLine func(line string) (bool, error)) error {
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -441,10 +441,16 @@ func RunLineOutputCmd(cmd *exec.Cmd, onLine func(line string) error) error {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		if err := onLine(line); err != nil {
+		stop, err := onLine(line)
+		if err != nil {
 			return err
+		}
+		if stop {
+			cmd.Process.Kill()
+			break
 		}
 	}
 
-	return cmd.Wait()
+	cmd.Wait()
+	return nil
 }

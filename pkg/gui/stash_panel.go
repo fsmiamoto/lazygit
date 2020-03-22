@@ -90,11 +90,12 @@ func (gui *Gui) stashDo(g *gocui.Gui, v *gocui.View, method string) error {
 		)
 		return gui.createErrorPanel(g, errorMessage)
 	}
-	if err := gui.GitCommand.StashDo(stashEntry.Index, method); err != nil {
-		return gui.createErrorPanel(g, err.Error())
-	}
+	err := gui.GitCommand.StashDo(stashEntry.Index, method)
 	go gui.refreshStashEntries()
 	go gui.refreshFiles()
+	if err != nil {
+		return gui.createErrorPanel(g, err.Error())
+	}
 	return nil
 }
 

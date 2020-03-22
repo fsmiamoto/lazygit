@@ -71,13 +71,12 @@ func (c *CommitListBuilder) extractCommitFromLine(line string) *Commit {
 	}
 
 	return &Commit{
-		Sha:           sha,
-		Name:          message,
-		DisplayString: line,
-		Tags:          tags,
-		ExtraInfo:     extraInfo,
-		Date:          date,
-		Author:        author,
+		Sha:       sha,
+		Name:      message,
+		Tags:      tags,
+		ExtraInfo: extraInfo,
+		Date:      date,
+		Author:    author,
 	}
 }
 

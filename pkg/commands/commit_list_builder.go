@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -100,15 +101,20 @@ func (c *CommitListBuilder) GetCommits(limit bool) ([]*Commit, error) {
 	}
 
 	unpushedCommits := c.getUnpushedCommits()
-	log := c.getLog(limit)
+	cmd := c.getLogCmd(limit)
 
-	// now we can split it up and turn it into commits
-	for _, line := range utils.SplitLines(log) {
+	err = RunLineOutputCmd(cmd, func(line string) error {
 		commit := c.extractCommitFromLine(line)
 		_, unpushed := unpushedCommits[commit.Sha[:8]]
 		commit.Status = map[bool]string{true: "unpushed", false: "pushed"}[unpushed]
 		commits = append(commits, commit)
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
+
 	if rebaseMode != "" {
 		currentCommit := commits[len(rebasingCommits)]
 		blue := color.New(color.FgYellow)
@@ -310,18 +316,11 @@ func (c *CommitListBuilder) getUnpushedCommits() map[string]bool {
 }
 
 // getLog gets the git log.
-func (c *CommitListBuilder) getLog(limit bool) string {
+func (c *CommitListBuilder) getLogCmd(limit bool) *exec.Cmd {
 	limitFlag := ""
 	if limit {
 		limitFlag = "-30"
 	}
 
-	result, err := c.OSCommand.RunCommandWithOutput(fmt.Sprintf("git log --oneline --pretty=format:\"%%H%s%%ar%s%%aN%s%%d%s%%s\" %s --abbrev=%d", SEPARATION_CHAR, SEPARATION_CHAR, SEPARATION_CHAR, SEPARATION_CHAR, limitFlag, 20))
-
-	if err != nil {
-		// assume if there is an error there are no commits yet for this branch
-		return ""
-	}
-
-	return result
+	return c.OSCommand.ExecutableFromString(fmt.Sprintf("git log --oneline --pretty=format:\"%%H%s%%ar%s%%aN%s%%d%s%%s\" %s --abbrev=%d", SEPARATION_CHAR, SEPARATION_CHAR, SEPARATION_CHAR, SEPARATION_CHAR, limitFlag, 20))
 }

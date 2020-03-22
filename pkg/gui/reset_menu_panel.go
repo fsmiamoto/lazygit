@@ -19,15 +19,11 @@ func (gui *Gui) resetToRef(ref string, strength string, options commands.RunComm
 	gui.State.Panels.Commits.SelectedLine = 0
 	gui.State.Panels.ReflogCommits.SelectedLine = 0
 
-	if err := gui.refreshCommits(gui.g); err != nil {
-		return err
-	}
+	gui.refreshCommits()
 	if err := gui.refreshFiles(); err != nil {
 		return err
 	}
-	if err := gui.refreshBranches(gui.g); err != nil {
-		return err
-	}
+	go gui.refreshBranches()
 	if err := gui.resetOrigin(gui.getCommitsView()); err != nil {
 		return err
 	}

@@ -11,21 +11,22 @@ import (
 )
 
 func (gui *Gui) refreshStatus(g *gocui.Gui) error {
-	state := gui.State.Panels.Status
+	go func() {
 
-	v, err := g.View("status")
-	if err != nil {
-		panic(err)
-	}
-	// for some reason if this isn't wrapped in an update the clear seems to
-	// be applied after the other things or something like that; the panel's
-	// contents end up cleared
-	g.Update(func(*gocui.Gui) error {
-		v.Clear()
+		state := gui.State.Panels.Status
+
+		v, err := g.View("status")
+		if err != nil {
+			panic(err)
+		}
+		// for some reason if this isn't wrapped in an update the clear seems to
+		// be applied after the other things or something like that; the panel's
+		// contents end up cleared
+
 		// TODO: base this off of the current branch
 		state.pushables, state.pullables = gui.GitCommand.GetCurrentBranchUpstreamDifferenceCount()
 		if err := gui.updateWorkTreeState(); err != nil {
-			return err
+			_ = gui.createErrorPanel(gui.g, err.Error())
 		}
 
 		trackColor := color.FgYellow
@@ -49,9 +50,11 @@ func (gui *Gui) refreshStatus(g *gocui.Gui) error {
 			status += fmt.Sprintf(" %s → %s", repoName, name)
 		}
 
-		fmt.Fprint(v, status)
-		return nil
-	})
+		g.Update(func(*gocui.Gui) error {
+			gui.setViewContent(gui.g, v, status)
+			return nil
+		})
+	}()
 
 	return nil
 }

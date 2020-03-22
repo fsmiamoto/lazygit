@@ -82,35 +82,37 @@ func (gui *Gui) selectFile(alreadySelected bool) error {
 }
 
 func (gui *Gui) refreshFiles() error {
-	gui.State.RefreshingFilesMutex.Lock()
-	gui.State.IsRefreshingFiles = true
-	defer func() {
-		gui.State.IsRefreshingFiles = false
-		gui.State.RefreshingFilesMutex.Unlock()
-	}()
+	go func() {
+		gui.State.RefreshingFilesMutex.Lock()
+		gui.State.IsRefreshingFiles = true
+		defer func() {
+			gui.State.IsRefreshingFiles = false
+			gui.State.RefreshingFilesMutex.Unlock()
+		}()
 
-	selectedFile, _ := gui.getSelectedFile(gui.g)
+		selectedFile, _ := gui.getSelectedFile(gui.g)
 
-	filesView := gui.getFilesView()
-	if filesView == nil {
-		// if the filesView hasn't been instantiated yet we just return
-		return nil
-	}
-	if err := gui.refreshStateFiles(); err != nil {
-		return err
-	}
-
-	gui.g.Update(func(g *gocui.Gui) error {
-		displayStrings := presentation.GetFileListDisplayStrings(gui.State.Files)
-		gui.renderDisplayStrings(filesView, displayStrings)
-
-		if g.CurrentView() == filesView || (g.CurrentView() == gui.getMainView() && g.CurrentView().Context == "merging") {
-			newSelectedFile, _ := gui.getSelectedFile(gui.g)
-			alreadySelected := newSelectedFile.Name == selectedFile.Name
-			return gui.selectFile(alreadySelected)
+		filesView := gui.getFilesView()
+		if filesView == nil {
+			// if the filesView hasn't been instantiated yet we just return
+			return
 		}
-		return nil
-	})
+		if err := gui.refreshStateFiles(); err != nil {
+			_ = gui.createErrorPanel(gui.g, err.Error())
+		}
+
+		gui.g.Update(func(g *gocui.Gui) error {
+			displayStrings := presentation.GetFileListDisplayStrings(gui.State.Files)
+			gui.renderDisplayStrings(filesView, displayStrings)
+
+			if g.CurrentView() == filesView || (g.CurrentView() == gui.getMainView() && g.CurrentView().Context == "merging") {
+				newSelectedFile, _ := gui.getSelectedFile(gui.g)
+				alreadySelected := newSelectedFile.Name == selectedFile.Name
+				return gui.selectFile(alreadySelected)
+			}
+			return nil
+		})
+	}()
 
 	return nil
 }

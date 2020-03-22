@@ -104,9 +104,7 @@ func (gui *Gui) handleDeleteTag(g *gocui.Gui, v *gocui.View) error {
 		if err := gui.GitCommand.DeleteTag(tag.Name); err != nil {
 			return gui.createErrorPanel(gui.g, err.Error())
 		}
-		if err := gui.refreshCommits(g); err != nil {
-			return gui.createErrorPanel(g, err.Error())
-		}
+		gui.refreshCommits()
 		if err := gui.refreshTags(); err != nil {
 			return gui.createErrorPanel(g, err.Error())
 		}
@@ -141,9 +139,7 @@ func (gui *Gui) handleCreateTag(g *gocui.Gui, v *gocui.View) error {
 		if err := gui.GitCommand.CreateLightweightTag(v.Buffer(), ""); err != nil {
 			return gui.createErrorPanel(gui.g, err.Error())
 		}
-		if err := gui.refreshCommits(g); err != nil {
-			return gui.createErrorPanel(g, err.Error())
-		}
+		gui.refreshCommits()
 		if err := gui.refreshTags(); err != nil {
 			return gui.createErrorPanel(g, err.Error())
 		}

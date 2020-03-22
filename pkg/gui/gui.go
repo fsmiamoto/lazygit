@@ -157,11 +157,6 @@ type commitFilesPanelState struct {
 	SelectedLine int
 }
 
-type statusPanelState struct {
-	pushables string
-	pullables string
-}
-
 type panelStates struct {
 	Files          *filePanelState
 	Branches       *branchPanelState
@@ -175,7 +170,6 @@ type panelStates struct {
 	LineByLine     *lineByLinePanelState
 	Merging        *mergingPanelState
 	CommitFiles    *commitFilesPanelState
-	Status         *statusPanelState
 }
 
 type searchingState struct {
@@ -185,35 +179,36 @@ type searchingState struct {
 }
 
 type guiState struct {
-	Files                []*commands.File
-	Branches             []*commands.Branch
-	Commits              []*commands.Commit
-	StashEntries         []*commands.StashEntry
-	CommitFiles          []*commands.CommitFile
-	ReflogCommits        []*commands.Commit
-	DiffEntries          []*commands.Commit
-	Remotes              []*commands.Remote
-	RemoteBranches       []*commands.RemoteBranch
-	Tags                 []*commands.Tag
-	MenuItemCount        int // can't store the actual list because it's of interface{} type
-	PreviousView         string
-	Platform             commands.Platform
-	Updating             bool
-	Panels               *panelStates
-	WorkingTreeState     string // one of "merging", "rebasing", "normal"
-	MainContext          string // used to keep the main and secondary views' contexts in sync
-	CherryPickedCommits  []*commands.Commit
-	SplitMainPanel       bool
-	RetainOriginalDir    bool
-	IsRefreshingFiles    bool
-	RefreshingFilesMutex sync.Mutex
-	Searching            searchingState
-	ScreenMode           int
-	SideView             *gocui.View
-	Ptmx                 *os.File
-	PrevMainWidth        int
-	PrevMainHeight       int
-	OldInformation       string
+	Files                 []*commands.File
+	Branches              []*commands.Branch
+	Commits               []*commands.Commit
+	StashEntries          []*commands.StashEntry
+	CommitFiles           []*commands.CommitFile
+	ReflogCommits         []*commands.Commit
+	DiffEntries           []*commands.Commit
+	Remotes               []*commands.Remote
+	RemoteBranches        []*commands.RemoteBranch
+	Tags                  []*commands.Tag
+	MenuItemCount         int // can't store the actual list because it's of interface{} type
+	PreviousView          string
+	Platform              commands.Platform
+	Updating              bool
+	Panels                *panelStates
+	WorkingTreeState      string // one of "merging", "rebasing", "normal"
+	MainContext           string // used to keep the main and secondary views' contexts in sync
+	CherryPickedCommits   []*commands.Commit
+	SplitMainPanel        bool
+	RetainOriginalDir     bool
+	IsRefreshingFiles     bool
+	RefreshingFilesMutex  sync.Mutex
+	RefreshingStatusMutex sync.Mutex
+	Searching             searchingState
+	ScreenMode            int
+	SideView              *gocui.View
+	Ptmx                  *os.File
+	PrevMainWidth         int
+	PrevMainHeight        int
+	OldInformation        string
 }
 
 // for now the split view will always be on
@@ -246,7 +241,6 @@ func NewGui(log *logrus.Entry, gitCommand *commands.GitCommand, oSCommand *comma
 				Conflicts:     []commands.Conflict{},
 				EditHistory:   stack.New(),
 			},
-			Status: &statusPanelState{},
 		},
 		ScreenMode: SCREEN_NORMAL,
 		SideView:   nil,

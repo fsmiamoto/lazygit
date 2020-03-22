@@ -10,20 +10,34 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
-func (gui *Gui) refreshStatus() {
-	state := gui.State.Panels.Status
+func (gui *Gui) getCurrentBranchTrack() (string, string) {
+	currentBranch := gui.currentBranch()
+	if currentBranch != nil {
+		return currentBranch.Pushables, currentBranch.Pullables
+	}
+	return "?", "?"
+}
 
-	// TODO: base this off of the current branch
-	state.pushables, state.pullables = gui.GitCommand.GetCurrentBranchUpstreamDifferenceCount()
+// refreshStatus is dependent on state that's set in the refreshCommits and refreshBranches methods.
+// It needs to know the pushable/pullable changes for the current branch (determines in refreshBranches)
+// and it needs to know the current worktree state (determined in refreshCommits).
+// refreshStatus should never be called on its own: it should only ever be called from within one of those
+// two other methods. Because the two other methods can be called at roughly the same time we use a mutex here
+// so that we're never rendering old information
+func (gui *Gui) refreshStatus() {
+	gui.State.RefreshingStatusMutex.Lock()
+	defer gui.State.RefreshingStatusMutex.Unlock()
+
+	pushables, pullables := gui.getCurrentBranchTrack()
 
 	trackColor := color.FgYellow
-	if state.pushables == "0" && state.pullables == "0" {
+	if pushables == "0" && pullables == "0" {
 		trackColor = color.FgGreen
-	} else if state.pushables == "?" && state.pullables == "?" {
+	} else if pushables == "?" && pullables == "?" {
 		trackColor = color.FgRed
 	}
 
-	status := utils.ColoredString(fmt.Sprintf("↑%s↓%s", state.pushables, state.pullables), trackColor)
+	status := utils.ColoredString(fmt.Sprintf("↑%s↓%s", pushables, pullables), trackColor)
 	branches := gui.State.Branches
 
 	if gui.State.WorkingTreeState != "normal" {
@@ -57,10 +71,10 @@ func (gui *Gui) handleCheckForUpdate(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (gui *Gui) handleStatusClick(g *gocui.Gui, v *gocui.View) error {
-	state := gui.State.Panels.Status
+	pushables, pullables := gui.getCurrentBranchTrack()
 
 	cx, _ := v.Cursor()
-	upstreamStatus := fmt.Sprintf("↑%s↓%s", state.pushables, state.pullables)
+	upstreamStatus := fmt.Sprintf("↑%s↓%s", pushables, pullables)
 	repoName := utils.GetCurrentRepoName()
 	gui.Log.Warn(gui.State.WorkingTreeState)
 	switch gui.State.WorkingTreeState {

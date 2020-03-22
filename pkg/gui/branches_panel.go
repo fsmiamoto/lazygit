@@ -490,5 +490,8 @@ func (gui *Gui) handleRenameBranch(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (gui *Gui) currentBranch() *commands.Branch {
+	if len(gui.State.Branches) == 0 {
+		return nil
+	}
 	return gui.State.Branches[0]
 }

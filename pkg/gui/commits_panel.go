@@ -92,7 +92,7 @@ func (gui *Gui) refreshCommits() {
 		}
 	}
 
-	gui.refreshStatus()
+	go gui.refreshStatus()
 }
 
 func (gui *Gui) refreshCommitsWithLimit() error {

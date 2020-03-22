@@ -54,13 +54,9 @@ func (gui *Gui) handleBranchSelect(g *gocui.Gui, v *gocui.View) error {
 // gui.refreshStatus is called at the end of this because that's when we can
 // be sure there is a state.Branches array to pick the current branch from
 func (gui *Gui) refreshBranches() {
-	if err := gui.refreshRemotes(); err != nil {
-		_ = gui.createErrorPanel(gui.g, err.Error())
-	}
-
-	if err := gui.refreshTags(); err != nil {
-		_ = gui.createErrorPanel(gui.g, err.Error())
-	}
+	// note: we might need to add some logic to handle when we want this done synchronously
+	go gui.refreshRemotes()
+	go gui.refreshTags()
 
 	builder, err := commands.NewBranchListBuilder(gui.Log, gui.GitCommand)
 	if err != nil {
@@ -70,15 +66,13 @@ func (gui *Gui) refreshBranches() {
 
 	// TODO: if we're in the remotes view and we've just deleted a remote we need to refresh accordingly
 	if gui.getBranchesView().Context == "local-branches" {
-		if err := gui.renderLocalBranchesWithSelection(); err != nil {
-			_ = gui.createErrorPanel(gui.g, err.Error())
-		}
+		gui.renderLocalBranchesWithSelection()
 	}
 
 	go gui.refreshStatus()
 }
 
-func (gui *Gui) renderLocalBranchesWithSelection() error {
+func (gui *Gui) renderLocalBranchesWithSelection() {
 	branchesView := gui.getBranchesView()
 
 	gui.refreshSelectedLine(&gui.State.Panels.Branches.SelectedLine, len(gui.State.Branches))
@@ -86,11 +80,9 @@ func (gui *Gui) renderLocalBranchesWithSelection() error {
 	gui.renderDisplayStrings(branchesView, displayStrings)
 	if gui.g.CurrentView() == branchesView {
 		if err := gui.handleBranchSelect(gui.g, branchesView); err != nil {
-			return err
+			_ = gui.createErrorPanel(gui.g, err.Error())
 		}
 	}
-
-	return nil
 }
 
 // specific functions
@@ -405,13 +397,13 @@ func (gui *Gui) refreshBranchesViewWithSelection() error {
 
 	switch branchesView.Context {
 	case "local-branches":
-		return gui.renderLocalBranchesWithSelection()
+		gui.renderLocalBranchesWithSelection()
 	case "remotes":
-		return gui.renderRemotesWithSelection()
+		gui.renderRemotesWithSelection()
 	case "remote-branches":
-		return gui.renderRemoteBranchesWithSelection()
+		gui.renderRemoteBranchesWithSelection()
 	case "tags":
-		return gui.renderTagsWithSelection()
+		gui.renderTagsWithSelection()
 	}
 
 	return nil

@@ -530,9 +530,7 @@ func (gui *Gui) handleCreateLightweightTag(commitSha string) error {
 			return gui.createErrorPanel(g, err.Error())
 		}
 		gui.refreshCommits()
-		if err := gui.refreshTags(); err != nil {
-			return gui.createErrorPanel(g, err.Error())
-		}
+		gui.refreshTags()
 		return gui.handleCommitSelect(g, v)
 	})
 }

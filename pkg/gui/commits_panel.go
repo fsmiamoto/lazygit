@@ -80,11 +80,9 @@ func (gui *Gui) refreshCommits() {
 	}
 
 	// doing this async because it shouldn't hold anything up
-	go func() {
-		if err := gui.refreshReflogCommits(); err != nil {
-			_ = gui.createErrorPanel(gui.g, err.Error())
-		}
-	}()
+	if err := gui.refreshReflogCommits(); err != nil {
+		_ = gui.createErrorPanel(gui.g, err.Error())
+	}
 
 	if gui.g.CurrentView() == gui.getCommitFilesView() || (gui.g.CurrentView() == gui.getMainView() || gui.State.MainContext == "patch-building") {
 		if err := gui.refreshCommitFilesView(); err != nil {

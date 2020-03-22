@@ -127,11 +127,6 @@ func (c *CommitListBuilder) GetCommits(limit bool) ([]*Commit, error) {
 		return nil, err
 	}
 
-	commits, err = c.setCommitCherryPickStatuses(commits)
-	if err != nil {
-		return nil, err
-	}
-
 	for _, commit := range commits {
 		for _, entry := range c.DiffEntries {
 			if entry.Sha == commit.Sha {
@@ -268,17 +263,6 @@ func (c *CommitListBuilder) setCommitMergedStatuses(commits []*Commit) ([]*Commi
 		}
 		if passedAncestor {
 			commits[i].Status = "merged"
-		}
-	}
-	return commits, nil
-}
-
-func (c *CommitListBuilder) setCommitCherryPickStatuses(commits []*Commit) ([]*Commit, error) {
-	for _, commit := range commits {
-		for _, cherryPickedCommit := range c.CherryPickedCommits {
-			if commit.Sha == cherryPickedCommit.Sha {
-				commit.Copied = true
-			}
 		}
 	}
 	return commits, nil

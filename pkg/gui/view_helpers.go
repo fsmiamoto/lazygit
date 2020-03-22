@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/go-errors/errors"
 	"github.com/jesseduffield/gocui"
@@ -20,6 +21,21 @@ func (gui *Gui) refreshSidePanels() error {
 	go gui.refreshStashEntries()
 
 	return nil
+}
+
+// synchronous version of refreshSidePanels
+func (gui *Gui) syncRefreshSidePanels() {
+	wg := sync.WaitGroup{}
+	wg.Add(4)
+	for _, f := range []func(){gui.refreshBranches, gui.refreshFiles, gui.refreshCommits, gui.refreshStashEntries} {
+		f := f
+		go func() {
+			f()
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
 }
 
 func (gui *Gui) nextView(g *gocui.Gui, v *gocui.View) error {

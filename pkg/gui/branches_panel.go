@@ -152,42 +152,40 @@ func (gui *Gui) handleCheckoutRef(ref string, options handleCheckoutRefOptions) 
 		gui.State.Panels.Commits.LimitCommits = true
 	}
 
-	return gui.WithWaitingStatus(waitingStatus, func() error {
-		if err := gui.GitCommand.Checkout(ref, cmdOptions); err != nil {
-			// note, this will only work for english-language git commands. If we force git to use english, and the error isn't this one, then the user will receive an english command they may not understand. I'm not sure what the best solution to this is. Running the command once in english and a second time in the native language is one option
+	if err := gui.GitCommand.Checkout(ref, cmdOptions); err != nil {
+		// note, this will only work for english-language git commands. If we force git to use english, and the error isn't this one, then the user will receive an english command they may not understand. I'm not sure what the best solution to this is. Running the command once in english and a second time in the native language is one option
 
-			if strings.Contains(err.Error(), "Please commit your changes or stash them before you switch branch") {
-				// offer to autostash changes
-				return gui.createConfirmationPanel(gui.g, gui.getBranchesView(), true, gui.Tr.SLocalize("AutoStashTitle"), gui.Tr.SLocalize("AutoStashPrompt"), func(g *gocui.Gui, v *gocui.View) error {
+		if strings.Contains(err.Error(), "Please commit your changes or stash them before you switch branch") {
+			// offer to autostash changes
+			return gui.createConfirmationPanel(gui.g, gui.getBranchesView(), true, gui.Tr.SLocalize("AutoStashTitle"), gui.Tr.SLocalize("AutoStashPrompt"), func(g *gocui.Gui, v *gocui.View) error {
 
-					if err := gui.GitCommand.StashSave(gui.Tr.SLocalize("StashPrefix") + ref); err != nil {
-						return gui.createErrorPanel(g, err.Error())
-					}
-					if err := gui.GitCommand.Checkout(ref, cmdOptions); err != nil {
-						return gui.createErrorPanel(g, err.Error())
-					}
+				if err := gui.GitCommand.StashSave(gui.Tr.SLocalize("StashPrefix") + ref); err != nil {
+					return gui.createErrorPanel(g, err.Error())
+				}
+				if err := gui.GitCommand.Checkout(ref, cmdOptions); err != nil {
+					return gui.createErrorPanel(g, err.Error())
+				}
 
-					onSuccess()
+				onSuccess()
 
-					if err := gui.GitCommand.StashDo(0, "pop"); err != nil {
-						if err := gui.refreshSidePanels(); err != nil {
-							return err
-						}
-						return gui.createErrorPanel(g, err.Error())
-					}
-					return gui.refreshSidePanels()
-				}, nil)
-			}
-
-			if err := gui.createErrorPanel(gui.g, err.Error()); err != nil {
-				return err
-			}
+				if err := gui.GitCommand.StashDo(0, "pop"); err != nil {
+					gui.syncRefreshSidePanels()
+					return gui.createErrorPanel(g, err.Error())
+				}
+				gui.syncRefreshSidePanels()
+				return nil
+			}, nil)
 		}
 
-		onSuccess()
+		if err := gui.createErrorPanel(gui.g, err.Error()); err != nil {
+			return err
+		}
+	}
 
-		return gui.refreshSidePanels()
-	})
+	onSuccess()
+
+	gui.syncRefreshSidePanels()
+	return nil
 }
 
 func (gui *Gui) handleCheckoutByName(g *gocui.Gui, v *gocui.View) error {
@@ -219,9 +217,7 @@ func (gui *Gui) handleNewBranch(g *gocui.Gui, v *gocui.View) error {
 		if err := gui.GitCommand.NewBranch(gui.trimmedContent(v), branch.Name); err != nil {
 			return gui.createErrorPanel(g, err.Error())
 		}
-		if err := gui.refreshSidePanels(); err != nil {
-			return gui.createErrorPanel(g, err.Error())
-		}
+		gui.syncRefreshSidePanels()
 		return gui.handleBranchSelect(g, v)
 	})
 }

@@ -82,13 +82,6 @@ func (gui *Gui) selectFile(alreadySelected bool) error {
 }
 
 func (gui *Gui) refreshFiles() {
-	gui.State.RefreshingFilesMutex.Lock()
-	gui.State.IsRefreshingFiles = true
-	defer func() {
-		gui.State.IsRefreshingFiles = false
-		gui.State.RefreshingFilesMutex.Unlock()
-	}()
-
 	selectedFile, _ := gui.getSelectedFile(gui.g)
 
 	filesView := gui.getFilesView()

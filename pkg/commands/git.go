@@ -1106,27 +1106,36 @@ func (c *GitCommand) FetchRemote(remoteName string) error {
 	return c.OSCommand.RunCommand("git fetch %s", remoteName)
 }
 
-func (c *GitCommand) GetReflogCommits() ([]*Commit, error) {
+// GetNewReflogCommits only returns the new reflog commits since the given lastReflogCommit
+// if none is passed (i.e. it's value is nil) then we get all the reflog commits
+func (c *GitCommand) GetNewReflogCommits(lastReflogCommit *Commit) ([]*Commit, error) {
 	output, err := c.OSCommand.RunCommandWithOutput("git reflog --abbrev=20 --date=iso")
 	if err != nil {
 		return nil, err
 	}
 
 	lines := strings.Split(strings.TrimSpace(output), "\n")
-	commits := make([]*Commit, len(lines))
+	commits := make([]*Commit, 0, len(lines))
 	re := regexp.MustCompile(`(\w+).*HEAD@\{([^\}]+)\}: (.*)`)
-	for i, line := range lines {
+	for _, line := range lines {
 		match := re.FindStringSubmatch(line)
 		if len(match) <= 1 {
 			continue
 		}
 
-		commits[i] = &Commit{
+		commit := &Commit{
 			Sha:    match[1],
 			Name:   match[3],
 			Date:   match[2],
 			Status: "reflog",
 		}
+
+		if lastReflogCommit != nil && commit.Sha == lastReflogCommit.Sha && commit.Date == lastReflogCommit.Date {
+			// after this point we already have these reflogs loaded so we'll simply return the new ones
+			return commits, nil
+		}
+
+		commits = append(commits, commit)
 	}
 
 	return commits, nil

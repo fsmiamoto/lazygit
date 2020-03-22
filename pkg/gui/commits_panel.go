@@ -79,7 +79,6 @@ func (gui *Gui) refreshCommits() {
 		_ = gui.createErrorPanel(gui.g, err.Error())
 	}
 
-	// doing this async because it shouldn't hold anything up
 	if err := gui.refreshReflogCommits(); err != nil {
 		_ = gui.createErrorPanel(gui.g, err.Error())
 	}

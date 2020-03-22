@@ -10,53 +10,37 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
-func (gui *Gui) refreshStatus(g *gocui.Gui) error {
-	go func() {
+func (gui *Gui) refreshStatus() {
+	state := gui.State.Panels.Status
 
-		state := gui.State.Panels.Status
+	// TODO: base this off of the current branch
+	state.pushables, state.pullables = gui.GitCommand.GetCurrentBranchUpstreamDifferenceCount()
 
-		v, err := g.View("status")
-		if err != nil {
-			panic(err)
-		}
-		// for some reason if this isn't wrapped in an update the clear seems to
-		// be applied after the other things or something like that; the panel's
-		// contents end up cleared
+	trackColor := color.FgYellow
+	if state.pushables == "0" && state.pullables == "0" {
+		trackColor = color.FgGreen
+	} else if state.pushables == "?" && state.pullables == "?" {
+		trackColor = color.FgRed
+	}
 
-		// TODO: base this off of the current branch
-		state.pushables, state.pullables = gui.GitCommand.GetCurrentBranchUpstreamDifferenceCount()
-		if err := gui.updateWorkTreeState(); err != nil {
-			_ = gui.createErrorPanel(gui.g, err.Error())
-		}
+	status := utils.ColoredString(fmt.Sprintf("↑%s↓%s", state.pushables, state.pullables), trackColor)
+	branches := gui.State.Branches
 
-		trackColor := color.FgYellow
-		if state.pushables == "0" && state.pullables == "0" {
-			trackColor = color.FgGreen
-		} else if state.pushables == "?" && state.pullables == "?" {
-			trackColor = color.FgRed
-		}
+	if gui.State.WorkingTreeState != "normal" {
+		status += utils.ColoredString(fmt.Sprintf(" (%s)", gui.State.WorkingTreeState), color.FgYellow)
+	}
 
-		status := utils.ColoredString(fmt.Sprintf("↑%s↓%s", state.pushables, state.pullables), trackColor)
-		branches := gui.State.Branches
+	if len(branches) > 0 {
+		branch := branches[0]
+		name := utils.ColoredString(branch.Name, presentation.GetBranchColor(branch.Name))
+		repoName := utils.GetCurrentRepoName()
+		status += fmt.Sprintf(" %s → %s", repoName, name)
+	}
 
-		if gui.State.WorkingTreeState != "normal" {
-			status += utils.ColoredString(fmt.Sprintf(" (%s)", gui.State.WorkingTreeState), color.FgYellow)
-		}
-
-		if len(branches) > 0 {
-			branch := branches[0]
-			name := utils.ColoredString(branch.Name, presentation.GetBranchColor(branch.Name))
-			repoName := utils.GetCurrentRepoName()
-			status += fmt.Sprintf(" %s → %s", repoName, name)
-		}
-
-		g.Update(func(*gocui.Gui) error {
-			gui.setViewContent(gui.g, v, status)
-			return nil
-		})
-	}()
-
-	return nil
+	gui.g.Update(func(*gocui.Gui) error {
+		gui.setViewContent(gui.g, gui.getStatusView(), status)
+		return nil
+	})
 }
 
 func runeCount(str string) int {

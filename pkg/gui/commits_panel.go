@@ -71,8 +71,9 @@ func (gui *Gui) handleCommitSelect(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (gui *Gui) refreshCommits() {
-	// I think this is here for the sake of some kind of rebasing thing
-	_ = gui.refreshStatus(gui.g)
+	if err := gui.updateWorkTreeState(); err != nil {
+		_ = gui.createErrorPanel(gui.g, err.Error())
+	}
 
 	if err := gui.refreshCommitsWithLimit(); err != nil {
 		_ = gui.createErrorPanel(gui.g, err.Error())
@@ -90,6 +91,8 @@ func (gui *Gui) refreshCommits() {
 			_ = gui.createErrorPanel(gui.g, err.Error())
 		}
 	}
+
+	gui.refreshStatus()
 }
 
 func (gui *Gui) refreshCommitsWithLimit() error {
@@ -486,7 +489,7 @@ func (gui *Gui) handleCreateFixupCommit(g *gocui.Gui, v *gocui.View) error {
 			return gui.createErrorPanel(g, err.Error())
 		}
 
-		return gui.refreshSidePanels(gui.g)
+		return gui.refreshSidePanels()
 	}, nil)
 }
 

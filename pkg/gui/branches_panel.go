@@ -75,7 +75,7 @@ func (gui *Gui) refreshBranches() {
 		}
 	}
 
-	_ = gui.refreshStatus(gui.g)
+	go gui.refreshStatus()
 }
 
 func (gui *Gui) renderLocalBranchesWithSelection() error {
@@ -136,7 +136,7 @@ func (gui *Gui) handleForceCheckout(g *gocui.Gui, v *gocui.View) error {
 		if err := gui.GitCommand.Checkout(branch.Name, commands.CheckoutOptions{Force: true}); err != nil {
 			_ = gui.createErrorPanel(g, err.Error())
 		}
-		return gui.refreshSidePanels(g)
+		return gui.refreshSidePanels()
 	}, nil)
 }
 
@@ -172,12 +172,12 @@ func (gui *Gui) handleCheckoutRef(ref string, options handleCheckoutRefOptions) 
 					gui.State.Panels.Branches.SelectedLine = 0
 
 					if err := gui.GitCommand.StashDo(0, "pop"); err != nil {
-						if err := gui.refreshSidePanels(g); err != nil {
+						if err := gui.refreshSidePanels(); err != nil {
 							return err
 						}
 						return gui.createErrorPanel(g, err.Error())
 					}
-					return gui.refreshSidePanels(g)
+					return gui.refreshSidePanels()
 				}, nil)
 			}
 
@@ -188,7 +188,7 @@ func (gui *Gui) handleCheckoutRef(ref string, options handleCheckoutRefOptions) 
 
 		gui.State.Panels.Branches.SelectedLine = 0
 		gui.State.Panels.Commits.SelectedLine = 0
-		return gui.refreshSidePanels(gui.g)
+		return gui.refreshSidePanels()
 	})
 }
 
@@ -221,7 +221,7 @@ func (gui *Gui) handleNewBranch(g *gocui.Gui, v *gocui.View) error {
 		if err := gui.GitCommand.NewBranch(gui.trimmedContent(v), branch.Name); err != nil {
 			return gui.createErrorPanel(g, err.Error())
 		}
-		if err := gui.refreshSidePanels(g); err != nil {
+		if err := gui.refreshSidePanels(); err != nil {
 			return gui.createErrorPanel(g, err.Error())
 		}
 		return gui.handleBranchSelect(g, v)
@@ -266,7 +266,7 @@ func (gui *Gui) deleteNamedBranch(g *gocui.Gui, v *gocui.View, selectedBranch *c
 			}
 			return gui.createErrorPanel(g, errMessage)
 		}
-		return gui.refreshSidePanels(g)
+		return gui.refreshSidePanels()
 	}, nil)
 }
 
@@ -360,7 +360,7 @@ func (gui *Gui) handleFastForward(g *gocui.Gui, v *gocui.View) error {
 			if err := gui.GitCommand.PullWithoutPasswordCheck("--ff-only"); err != nil {
 				_ = gui.createErrorPanel(gui.g, err.Error())
 			}
-			_ = gui.refreshSidePanels(gui.g)
+			_ = gui.refreshSidePanels()
 		} else {
 			if err := gui.GitCommand.FastForward(branch.Name, remoteName, remoteBranchName); err != nil {
 				_ = gui.createErrorPanel(gui.g, err.Error())

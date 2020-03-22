@@ -157,12 +157,12 @@ func (gui *Gui) handleHardResetWithAutoStash(commitSha string, options handleHar
 				}
 
 				if err := gui.GitCommand.StashDo(0, "pop"); err != nil {
-					if err := gui.refreshSidePanels(g); err != nil {
+					if err := gui.refreshSidePanels(); err != nil {
 						return err
 					}
 					return gui.createErrorPanel(g, err.Error())
 				}
-				return gui.refreshSidePanels(g)
+				return gui.refreshSidePanels()
 			})
 		}, nil)
 	}
@@ -171,6 +171,6 @@ func (gui *Gui) handleHardResetWithAutoStash(commitSha string, options handleHar
 		if err := reset(); err != nil {
 			return err
 		}
-		return gui.refreshSidePanels(gui.g)
+		return gui.refreshSidePanels()
 	})
 }

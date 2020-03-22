@@ -312,7 +312,7 @@ func (gui *Gui) handleAmendCommitPress(g *gocui.Gui, filesView *gocui.View) erro
 			return nil
 		}
 
-		return gui.refreshSidePanels(g)
+		return gui.refreshSidePanels()
 	}, nil)
 }
 

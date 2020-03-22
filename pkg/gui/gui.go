@@ -344,7 +344,7 @@ func (gui *Gui) scrollDownSecondary(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (gui *Gui) handleRefresh(g *gocui.Gui, v *gocui.View) error {
-	return gui.refreshSidePanels(g)
+	return gui.refreshSidePanels()
 }
 
 func max(a, b int) int {
@@ -856,7 +856,7 @@ func (gui *Gui) loadNewRepo() error {
 	}
 	gui.waitForIntro.Done()
 
-	if err := gui.refreshSidePanels(gui.g); err != nil {
+	if err := gui.refreshSidePanels(); err != nil {
 		return err
 	}
 
@@ -916,7 +916,7 @@ func (gui *Gui) fetch(g *gocui.Gui, v *gocui.View, canAskForCredentials bool) (u
 		_ = gui.createConfirmationPanel(g, v, true, gui.Tr.SLocalize("Error"), coloredMessage, close, close)
 	}
 
-	_ = gui.refreshStatus(g)
+	gui.refreshSidePanels()
 
 	return unamePassOpend, err
 }

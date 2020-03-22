@@ -13,7 +13,7 @@ import (
 
 var cyclableViews = []string{"status", "files", "branches", "commits", "stash"}
 
-func (gui *Gui) refreshSidePanels(g *gocui.Gui) error {
+func (gui *Gui) refreshSidePanels() error {
 	go gui.refreshBranches()
 	go gui.refreshFiles()
 	go gui.refreshCommits()
@@ -304,6 +304,11 @@ func (gui *Gui) getMenuView() *gocui.View {
 
 func (gui *Gui) getSearchView() *gocui.View {
 	v, _ := gui.g.View("search")
+	return v
+}
+
+func (gui *Gui) getStatusView() *gocui.View {
+	v, _ := gui.g.View("status")
 	return v
 }
 
